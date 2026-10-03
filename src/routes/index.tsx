@@ -1,24 +1,54 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ContactButtons, MapEmbed, OpenBadge, ReviewButton, SearchBar, TodayHours } from "@/components/shop";
+import { CATEGORIES, pageMeta } from "@/lib/shop";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () =>
+    pageMeta(
+      "Screws & Tools — Hardware Store in Nassau, Bahamas",
+      "Screws, bolts, nuts, washers, drill bits and hand tools at 9 Faith Avenue, Nassau, Bahamas. Check prices and stock online, then call or WhatsApp us.",
+      "/",
+    ),
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Home() {
+  const navigate = useNavigate();
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="space-y-10">
+      <section className="space-y-5 pt-2">
+        <OpenBadge />
+        <h1 className="text-5xl uppercase sm:text-6xl">
+          The right screw. <span className="text-primary">Right here</span> in Nassau.
+        </h1>
+        <p className="text-xl text-muted-foreground">Fasteners and tools on Faith Avenue. Search what you need, check the price, then come grab it.</p>
+        <SearchBar onSubmit={(q) => navigate({ to: "/products", search: { q } })} />
+        <ContactButtons />
+        <TodayHours />
+      </section>
+
+      <section aria-labelledby="cats" className="space-y-3">
+        <h2 id="cats" className="text-3xl uppercase">Shop by category</h2>
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {CATEGORIES.map((c) => (
+            <li key={c.slug}>
+              <Link
+                to="/$category"
+                params={{ category: c.slug }}
+                className="flex min-h-20 items-end rounded-lg border-l-4 border-primary bg-card p-4 font-display text-xl font-bold uppercase leading-tight hover:bg-accent"
+              >
+                {c.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="find" className="space-y-3">
+        <h2 id="find" className="text-3xl uppercase">Find us</h2>
+        <MapEmbed />
+        <ReviewButton />
+      </section>
     </div>
   );
 }
