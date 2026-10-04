@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { deleteProduct, saveProduct, uploadProducts, verifyAdmin } from "@/lib/products.functions";
 import { searchQuery } from "@/lib/queries";
@@ -155,8 +155,11 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
 
 function ProductForm({ pw, product, onDone }: { pw: string; product: Product | null; onDone: () => void }) {
   const save = useServerFn(saveProduct);
+  const ref = useRef<HTMLFormElement>(null);
+  useEffect(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "center" }), []);
   return (
     <form
+      ref={ref}
       key={product?.id ?? "new"}
       className="grid gap-3 rounded-lg border-2 border-primary bg-card p-4 sm:grid-cols-2"
       onSubmit={async (e) => {
