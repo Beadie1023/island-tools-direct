@@ -17,6 +17,7 @@ export type Database = {
       products: {
         Row: {
           category: string
+          category_name: string
           created_at: string
           id: string
           in_stock: boolean
@@ -28,6 +29,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          category_name?: string
           created_at?: string
           id?: string
           in_stock?: boolean
@@ -39,6 +41,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          category_name?: string
           created_at?: string
           id?: string
           in_stock?: boolean
@@ -70,7 +73,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          name: string | null
+          product_count: number | null
+          slug: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
