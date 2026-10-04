@@ -26,7 +26,7 @@ export const Route = createFileRoute("/products/$slug")({
             "@context": "https://schema.org",
             "@type": "Product",
             name: p.name,
-            category: categoryName(p.category),
+            category: p.category_name,
             description: `${p.name}, ${p.size}`,
             offers: {
               "@type": "Offer",
@@ -58,13 +58,13 @@ function ProductPage() {
     <article className="space-y-6">
       <nav aria-label="Breadcrumb" className="text-muted-foreground">
         <Link to="/products" className="underline">Products</Link> /{" "}
-        <Link to="/$category" params={{ category: p.category }} className="underline">{categoryName(p.category)}</Link>
+        <Link to="/$category" params={{ category: p.category }} className="underline">{p.category_name}</Link>
       </nav>
       <div className="space-y-3 rounded-lg border bg-card p-5">
         <h1 className="text-4xl uppercase sm:text-5xl">{p.name}</h1>
         <dl className="grid gap-2 text-lg">
           <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Size / spec</dt><dd className="font-semibold">{p.size || "—"}</dd></div>
-          <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Category</dt><dd className="font-semibold">{categoryName(p.category)}</dd></div>
+          <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Category</dt><dd className="font-semibold">{p.category_name}</dd></div>
           <div className="flex items-center justify-between"><dt className="text-muted-foreground">Price</dt><dd className="text-3xl font-bold">{formatPrice(p.price)}</dd></div>
         </dl>
         <StockLabel inStock={p.in_stock} />
@@ -73,7 +73,7 @@ function ProductPage() {
       <ContactButtons />
       {data.related.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-3xl uppercase">More {categoryName(p.category)}</h2>
+          <h2 className="text-3xl uppercase">More {p.category_name}</h2>
           <ul className="grid gap-3 sm:grid-cols-2">{data.related.map((r) => <ProductCard key={r.id} p={r} />)}</ul>
         </section>
       )}

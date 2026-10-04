@@ -121,7 +121,7 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
               <li key={p.id} className="flex flex-wrap items-center gap-3 p-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-bold">{p.name}</p>
-                  <p className="text-sm text-muted-foreground">{categoryName(p.category)} · {p.size} · {formatPrice(p.price)} · {p.in_stock ? "In stock" : "Ask us"}</p>
+                  <p className="text-sm text-muted-foreground">{p.category_name} · {p.size} · {formatPrice(p.price)} · {p.in_stock ? "In stock" : "Ask us"}</p>
                 </div>
                 <button onClick={() => setEditing(p)} className={`${btn} bg-secondary`}>Edit</button>
                 <button
@@ -170,7 +170,7 @@ function ProductForm({ pw, product, onDone }: { pw: string; product: Product | n
       }}
     >
       <label className="space-y-1"><span>Name</span><input name="name" required defaultValue={product?.name} className={input} /></label>
-      <label className="space-y-1"><span>Category</span><input name="category" required defaultValue={product ? categoryName(product.category) : ""} className={input} /></label>
+      <label className="space-y-1"><span>Category</span><input name="category" required defaultValue={product ? product.category_name : ""} className={input} /></label>
       <label className="space-y-1"><span>Size / spec</span><input name="size" defaultValue={product?.size} className={input} /></label>
       <label className="space-y-1"><span>Price (BSD)</span><input name="price" type="number" step="0.01" min="0" defaultValue={product?.price ?? ""} className={input} /></label>
       <label className="flex min-h-12 items-center gap-3"><input name="in_stock" type="checkbox" defaultChecked={product?.in_stock ?? true} className="h-6 w-6 accent-primary" /> In stock</label>
