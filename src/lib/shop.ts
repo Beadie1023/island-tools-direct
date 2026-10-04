@@ -60,14 +60,6 @@ export function isOpenAt(date = new Date()) {
   return !!h && minutes >= h.open && minutes < h.close;
 }
 
-export const CATEGORIES: { slug: string; name: string; blurb: string }[] = [
-  { slug: "screws", name: "Screws", blurb: "Deck, wood, drywall and stainless steel screws." },
-  { slug: "bolts", name: "Bolts", blurb: "Hex, carriage and lag bolts in galvanized and stainless." },
-  { slug: "nuts-and-washers", name: "Nuts & Washers", blurb: "Hex nuts, lock nuts and flat washers." },
-  { slug: "drill-bits", name: "Drill Bits", blurb: "HSS, masonry and wood drill bits and sets." },
-  { slug: "hand-tools", name: "Hand Tools", blurb: "Hammers, screwdrivers, wrenches and pliers." },
-  { slug: "power-tool-accessories", name: "Power Tool Accessories", blurb: "Blades, driver bits and sanding discs." },
-];
 
 export const slugify = (s: string) =>
   s
@@ -75,10 +67,9 @@ export const slugify = (s: string) =>
     .replace(/&/g, " and ")
     .replace(/["'″]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, "") || "item";
 
 export const categoryName = (slug: string) =>
-  CATEGORIES.find((c) => c.slug === slug)?.name ??
   slug.split("-").map((w) => (w === "and" ? "&" : w[0]?.toUpperCase() + w.slice(1))).join(" ");
 
 export const formatPrice = (p: number | null) =>
@@ -107,6 +98,7 @@ export type Product = {
   slug: string;
   name: string;
   category: string;
+  category_name: string;
   size: string;
   price: number | null;
   in_stock: boolean;
@@ -124,3 +116,16 @@ export const pageMeta = (title: string, description: string, url: string) => ({
   ],
   links: [{ rel: "canonical", href: url }],
 });
+
+export type Category = { slug: string; name: string; product_count: number };
+
+/** Unique URL slugs: first "deck-screw", then "deck-screw-2", "deck-screw-3"… */
+export function assignSlugs<T extends { name: string }>(rows: T[], taken = new Set<string>()) {
+  return rows.map((r) => {
+    const base = slugify(r.name);
+    let slug = base;
+    for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
+    taken.add(slug);
+    return { ...r, slug };
+  });
+}
