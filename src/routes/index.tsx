@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { ContactButtons, MapEmbed, OpenBadge, ReviewButton, SearchBar, TodayHours } from "@/components/shop";
-import { CATEGORIES, pageMeta } from "@/lib/shop";
+import { categoriesQuery } from "@/lib/queries";
+import { pageMeta } from "@/lib/shop";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -9,11 +11,14 @@ export const Route = createFileRoute("/")({
       "Screws, bolts, nuts, washers, drill bits and hand tools at 9 Faith Avenue, Nassau, Bahamas. Check prices and stock online, then call or WhatsApp us.",
       "/",
     ),
+  loader: ({ context }) => context.queryClient.ensureQueryData(categoriesQuery),
+  errorComponent: () => <p className="text-lg">The page couldn't load. Please refresh or call us.</p>,
   component: Home,
 });
 
 function Home() {
   const navigate = useNavigate();
+  const { data: categories } = useSuspenseQuery(categoriesQuery);
   return (
     <div className="space-y-10">
       <section className="space-y-5 pt-2">
@@ -30,14 +35,15 @@ function Home() {
       <section aria-labelledby="cats" className="space-y-3">
         <h2 id="cats" className="text-3xl uppercase">Shop by category</h2>
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <li key={c.slug}>
               <Link
                 to="/$category"
                 params={{ category: c.slug }}
-                className="flex min-h-20 items-end rounded-lg border-l-4 border-primary bg-card p-4 font-display text-xl font-bold uppercase leading-tight hover:bg-accent"
+                className="flex min-h-20 h-full flex-col justify-end rounded-lg border-l-4 border-primary bg-card p-4 font-display text-xl font-bold uppercase leading-tight hover:bg-accent"
               >
                 {c.name}
+                <span className="font-sans text-sm font-normal normal-case text-muted-foreground">{c.product_count.toLocaleString()} items</span>
               </Link>
             </li>
           ))}

@@ -6,7 +6,7 @@ import { categoryQuery, searchQuery } from "@/lib/queries";
 import { pageMeta } from "@/lib/shop";
 
 export const Route = createFileRoute("/$category")({
-  validateSearch: z.object({ q: z.string().optional(), page: z.coerce.number().int().min(1).optional() }),
+  validateSearch: z.object({ q: z.string().optional(), sub: z.string().optional(), page: z.coerce.number().int().min(1).optional() }),
   loaderDeps: ({ search }) => search,
   loader: async ({ context, params, deps }) => {
     const cat = await context.queryClient.ensureQueryData(categoryQuery(params.category));
@@ -47,7 +47,7 @@ function CategoryPage() {
       <ProductBrowser
         key={category}
         search={{ ...search, cat: category }}
-        onChange={({ q, page }) => navigate({ search: { q, page }, replace: true })}
+        onChange={({ q, sub, page }) => navigate({ search: { q, sub, page }, replace: true })}
       />
     </div>
   );

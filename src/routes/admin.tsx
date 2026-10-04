@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deleteProduct, saveProduct, uploadProducts, verifyAdmin } from "@/lib/products.functions";
-import { productsQuery } from "@/lib/queries";
-import { categoryName, formatPrice, type Product } from "@/lib/shop";
+import { searchQuery } from "@/lib/queries";
+import { formatPrice, type Product } from "@/lib/shop";
 import { parseRows, type ProductRow } from "@/lib/import";
 
 export const Route = createFileRoute("/admin")({
@@ -54,13 +54,20 @@ function Admin() {
 
 function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
   const qc = useQueryClient();
-  const { data } = useQuery(productsQuery);
+  const [filter, setFilter] = useState("");
+  const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  useEffect(() => {
+    const t = setTimeout(() => { setQ(filter); setPage(1); }, 300);
+    return () => clearTimeout(t);
+  }, [filter]);
+  const { data } = useQuery({ ...searchQuery({ q, page }), placeholderData: keepPreviousData });
+  const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
   const upload = useServerFn(uploadProducts);
   const del = useServerFn(deleteProduct);
   const [preview, setPreview] = useState<{ rows: ProductRow[]; errors: string[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<Product | "new" | null>(null);
-  const [filter, setFilter] = useState("");
   const refresh = () => qc.invalidateQueries();
 
   return (
@@ -72,7 +79,7 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
 
       <section className="space-y-3 rounded-lg border bg-card p-5">
         <h2 className="text-2xl uppercase">Bulk upload (CSV or Excel)</h2>
-        <p className="text-muted-foreground">Columns: <code>name, category, size, price, in_stock</code>. Products with the same name are updated; new names are added.</p>
+        <p className="text-muted-foreground">Columns: <code>name, category, subcategory, size, price, in_stock</code>. Uploading <strong>replaces the whole product list</strong> with the file.</p>
         <input
           type="file"
           accept=".csv,.xlsx,.xls"
@@ -109,19 +116,18 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl uppercase">Products ({data?.products.length ?? 0})</h2>
+          <h2 className="text-2xl uppercase">Products ({data?.total.toLocaleString() ?? 0})</h2>
           <button onClick={() => setEditing("new")} className={`${btn} bg-primary text-primary-foreground`}>+ Add</button>
         </div>
         {editing && <ProductForm pw={pw} product={editing === "new" ? null : editing} onDone={() => { setEditing(null); refresh(); }} />}
-        <input placeholder="Filter…" value={filter} onChange={(e) => setFilter(e.target.value)} className={input} />
+        <input placeholder="Search products…" value={filter} onChange={(e) => setFilter(e.target.value)} className={input} />
         <ul className="divide-y rounded-lg border bg-card">
-          {data?.products
-            .filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()))
+          {data?.items
             .map((p) => (
               <li key={p.id} className="flex flex-wrap items-center gap-3 p-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-bold">{p.name}</p>
-                  <p className="text-sm text-muted-foreground">{p.category_name} · {p.size} · {formatPrice(p.price)} · {p.in_stock ? "In stock" : "Ask us"}</p>
+                  <p className="text-sm text-muted-foreground">{p.category_name}{p.subcategory ? ` · ${p.subcategory}` : ""} · {p.size} · {formatPrice(p.price)} · {p.in_stock ? "In stock" : "Ask us"}</p>
                 </div>
                 <button onClick={() => setEditing(p)} className={`${btn} bg-secondary`}>Edit</button>
                 <button
@@ -135,6 +141,13 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
               </li>
             ))}
         </ul>
+        {pages > 1 && (
+          <nav aria-label="Pages" className="flex items-center justify-between gap-3">
+            <button disabled={page <= 1} onClick={() => setPage(page - 1)} className={`${btn} bg-secondary`}>← Previous</button>
+            <span className="font-semibold">{page} / {pages}</span>
+            <button disabled={page >= pages} onClick={() => setPage(page + 1)} className={`${btn} bg-primary text-primary-foreground`}>Next →</button>
+          </nav>
+        )}
       </section>
     </div>
   );
@@ -158,6 +171,7 @@ function ProductForm({ pw, product, onDone }: { pw: string; product: Product | n
               product: {
                 name: String(f.get("name")),
                 category: String(f.get("category")),
+                subcategory: String(f.get("subcategory") ?? ""),
                 size: String(f.get("size") ?? ""),
                 price: priceStr ? Number(priceStr) : null,
                 in_stock: f.get("in_stock") === "on",
@@ -171,6 +185,7 @@ function ProductForm({ pw, product, onDone }: { pw: string; product: Product | n
     >
       <label className="space-y-1"><span>Name</span><input name="name" required defaultValue={product?.name} className={input} /></label>
       <label className="space-y-1"><span>Category</span><input name="category" required defaultValue={product ? product.category_name : ""} className={input} /></label>
+      <label className="space-y-1"><span>Subcategory (optional)</span><input name="subcategory" defaultValue={product?.subcategory} className={input} /></label>
       <label className="space-y-1"><span>Size / spec</span><input name="size" defaultValue={product?.size} className={input} /></label>
       <label className="space-y-1"><span>Price (BSD)</span><input name="price" type="number" step="0.01" min="0" defaultValue={product?.price ?? ""} className={input} /></label>
       <label className="flex min-h-12 items-center gap-3"><input name="in_stock" type="checkbox" defaultChecked={product?.in_stock ?? true} className="h-6 w-6 accent-primary" /> In stock</label>

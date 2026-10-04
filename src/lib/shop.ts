@@ -99,6 +99,7 @@ export type Product = {
   name: string;
   category: string;
   category_name: string;
+  subcategory: string;
   size: string;
   price: number | null;
   in_stock: boolean;
@@ -118,6 +119,7 @@ export const pageMeta = (title: string, description: string, url: string) => ({
 });
 
 export type Category = { slug: string; name: string; product_count: number };
+export type Subcategory = { category: string; subcategory: string; product_count: number };
 
 /** Unique URL slugs: first "deck-screw", then "deck-screw-2", "deck-screw-3"… */
 export function assignSlugs<T extends { name: string }>(rows: T[], taken = new Set<string>()) {

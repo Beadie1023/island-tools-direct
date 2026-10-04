@@ -1,4 +1,4 @@
-export type ProductRow = { name: string; category: string; size: string; price: number | null; in_stock: boolean };
+export type ProductRow = { name: string; category: string; subcategory: string; size: string; price: number | null; in_stock: boolean };
 
 export function parseStock(v: unknown) {
   const s = String(v ?? "").trim().toLowerCase();
@@ -25,7 +25,7 @@ export function normalizeRows(raw: Record<string, unknown>[]) {
       errors.push(`Row ${i + 2}: missing name or category`);
       return;
     }
-    rows.push({ name, category, size: String(o.size ?? "").trim(), price: parsePrice(o.price), in_stock: parseStock(o.in_stock) });
+    rows.push({ name, category, subcategory: String(o.subcategory ?? "").trim(), size: String(o.size ?? "").trim(), price: parsePrice(o.price), in_stock: parseStock(o.in_stock) });
   });
   return { rows, errors };
 }

@@ -26,7 +26,7 @@ export const Route = createFileRoute("/products/$slug")({
             "@context": "https://schema.org",
             "@type": "Product",
             name: p.name,
-            category: p.category_name,
+            category: p.subcategory ? `${p.category_name} > ${p.subcategory}` : p.category_name,
             description: `${p.name}, ${p.size}`,
             offers: {
               "@type": "Offer",
@@ -64,7 +64,7 @@ function ProductPage() {
         <h1 className="text-4xl uppercase sm:text-5xl">{p.name}</h1>
         <dl className="grid gap-2 text-lg">
           <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Size / spec</dt><dd className="font-semibold">{p.size || "—"}</dd></div>
-          <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Category</dt><dd className="font-semibold">{p.category_name}</dd></div>
+          <div className="flex justify-between border-b pb-2"><dt className="text-muted-foreground">Category</dt><dd className="font-semibold">{p.subcategory ? `${p.category_name} · ${p.subcategory}` : p.category_name}</dd></div>
           <div className="flex items-center justify-between"><dt className="text-muted-foreground">Price</dt><dd className="text-3xl font-bold">{formatPrice(p.price)}</dd></div>
         </dl>
         <StockLabel inStock={p.in_stock} />

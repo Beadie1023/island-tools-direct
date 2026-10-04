@@ -136,7 +136,7 @@ export function ProductCard({ p }: { p: Product }) {
         params={{ slug: p.slug }}
         className="flex h-full flex-col gap-1 rounded-lg border bg-card p-4 transition-colors hover:border-primary"
       >
-        <span className="text-sm uppercase tracking-wide text-muted-foreground">{p.category_name}</span>
+        <span className="text-sm uppercase tracking-wide text-muted-foreground">{p.subcategory ? `${p.category_name} · ${p.subcategory}` : p.category_name}</span>
         <span className="font-display text-2xl font-bold leading-tight">{p.name}</span>
         <span className="text-muted-foreground">{p.size}</span>
         <span className="mt-auto flex items-center justify-between pt-3">
