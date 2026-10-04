@@ -1,18 +1,42 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { checkAdmin, publicClient } from "./products.server";
-import { slugify, type Product } from "./shop";
+import { assignSlugs, slugify, type Category, type Product } from "./shop";
 
-const COLS = "id, slug, name, category, size, price, in_stock";
+const COLS = "id, slug, name, category, category_name, size, price, in_stock";
+export const PAGE_SIZE = 48;
 
-export const listProducts = createServerFn({ method: "GET" }).handler(async () => {
-  const sb = publicClient();
-  const [{ data, error }, { data: setting }] = await Promise.all([
-    sb.from("products").select(COLS).order("category").order("name"),
-    sb.from("site_settings").select("value").eq("key", "prices_updated_at").maybeSingle(),
-  ]);
-  if (error) throw new Error("Could not load products");
-  return { products: (data ?? []) as Product[], updatedAt: setting?.value ?? null };
+export const searchProducts = createServerFn({ method: "GET" })
+  .inputValidator((d) =>
+    z.object({ q: z.string().max(100).default(""), cat: z.string().max(200).default(""), page: z.number().int().min(1).max(1000).default(1) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    let query = publicClient().from("products").select(COLS, { count: "exact" });
+    if (data.cat) query = query.eq("category", data.cat);
+    const terms = data.q.replace(/[,()%*\\]/g, " ").split(/\s+/).filter(Boolean).slice(0, 6);
+    for (const t of terms) query = query.or(`name.ilike.%${t}%,category_name.ilike.%${t}%`);
+    const from = (data.page - 1) * PAGE_SIZE;
+    const { data: rows, count, error } = await query.order("name").range(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error("Could not load products");
+    return { items: (rows ?? []) as Product[], total: count ?? 0, page: data.page, pageSize: PAGE_SIZE };
+  });
+
+export const listCategories = createServerFn({ method: "GET" }).handler(async () => {
+  const { data, error } = await publicClient().from("categories").select("slug, name, product_count").order("name").range(0, 1999);
+  if (error) throw new Error("Could not load categories");
+  return (data ?? []) as Category[];
+});
+
+export const getCategory = createServerFn({ method: "GET" })
+  .inputValidator((d) => z.object({ slug: z.string().max(200) }).parse(d))
+  .handler(async ({ data }) => {
+    const { data: c } = await publicClient().from("categories").select("slug, name, product_count").eq("slug", data.slug).maybeSingle();
+    return (c ?? null) as Category | null;
+  });
+
+export const getPricesUpdated = createServerFn({ method: "GET" }).handler(async () => {
+  const { data } = await publicClient().from("site_settings").select("value").eq("key", "prices_updated_at").maybeSingle();
+  return data?.value ?? null;
 });
 
 export const getProduct = createServerFn({ method: "GET" })
@@ -21,8 +45,7 @@ export const getProduct = createServerFn({ method: "GET" })
     const sb = publicClient();
     const { data: p } = await sb.from("products").select(COLS).eq("slug", data.slug).maybeSingle();
     if (!p) return { product: null, related: [] as Product[] };
-    const { data: related } = await sb
-      .from("products").select(COLS).eq("category", p.category).neq("slug", p.slug).limit(4);
+    const { data: related } = await sb.from("products").select(COLS).eq("category", p.category).neq("slug", p.slug).limit(4);
     return { product: p as Product, related: (related ?? []) as Product[] };
   });
 
@@ -36,35 +59,41 @@ export const verifyAdmin = createServerFn({ method: "POST" })
   });
 
 const row = z.object({
-  name: z.string().trim().min(1).max(200),
-  category: z.string().trim().min(1).max(100),
+  name: z.string().trim().min(1).max(300),
+  category: z.string().trim().min(1).max(200),
   size: z.string().trim().max(200).default(""),
   price: z.number().nonnegative().nullable(),
   in_stock: z.boolean(),
 });
 
+const toRecord = (r: z.infer<typeof row>) => ({
+  ...r,
+  category: slugify(r.category),
+  category_name: r.category,
+  updated_at: new Date().toISOString(),
+});
+
 async function touchPrices() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  await supabaseAdmin.from("site_settings").upsert({ key: "prices_updated_at", value: new Date().toISOString(), updated_at: new Date().toISOString() });
+  const now = new Date().toISOString();
+  await supabaseAdmin.from("site_settings").upsert({ key: "prices_updated_at", value: now, updated_at: now });
 }
 
+/** Replaces the whole product list with the uploaded file. */
 export const uploadProducts = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ password: pw, rows: z.array(row).min(1).max(5000) }).parse(d))
+  .inputValidator((d) => z.object({ password: pw, rows: z.array(row).min(1).max(20000) }).parse(d))
   .handler(async ({ data }) => {
     checkAdmin(data.password);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const seen = new Set<string>();
-    const records = data.rows.map((r) => {
-      let slug = slugify(r.name);
-      if (seen.has(slug)) slug = slugify(`${r.name} ${r.size}`);
-      seen.add(slug);
-      return { ...r, slug, category: slugify(r.category), updated_at: new Date().toISOString() };
-    });
-    const unique = Array.from(new Map(records.map((r) => [r.slug, r])).values());
-    const { error } = await supabaseAdmin.from("products").upsert(unique, { onConflict: "slug" });
-    if (error) throw new Error("Upload failed: " + error.message);
+    const records = assignSlugs(data.rows.map(toRecord));
+    const del = await supabaseAdmin.from("products").delete().not("id", "is", null);
+    if (del.error) throw new Error("Upload failed: " + del.error.message);
+    for (let i = 0; i < records.length; i += 500) {
+      const { error } = await supabaseAdmin.from("products").insert(records.slice(i, i + 500));
+      if (error) throw new Error("Upload failed: " + error.message);
+    }
     await touchPrices();
-    return { count: unique.length };
+    return { count: records.length };
   });
 
 export const saveProduct = createServerFn({ method: "POST" })
@@ -72,10 +101,16 @@ export const saveProduct = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     checkAdmin(data.password);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const rec = { ...data.product, category: slugify(data.product.category), updated_at: new Date().toISOString() };
-    const { error } = data.id
-      ? await supabaseAdmin.from("products").update(rec).eq("id", data.id)
-      : await supabaseAdmin.from("products").insert({ ...rec, slug: slugify(rec.name) });
+    const rec = toRecord(data.product);
+    let error;
+    if (data.id) {
+      ({ error } = await supabaseAdmin.from("products").update(rec).eq("id", data.id));
+    } else {
+      const base = slugify(rec.name);
+      const { data: existing } = await supabaseAdmin.from("products").select("slug").like("slug", `${base}%`);
+      const [withSlug] = assignSlugs([rec], new Set((existing ?? []).map((e) => e.slug)));
+      ({ error } = await supabaseAdmin.from("products").insert(withSlug));
+    }
     if (error) throw new Error(error.message);
     await touchPrices();
     return { ok: true };

@@ -1,23 +1,25 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { z } from "zod";
 import { ProductBrowser } from "@/components/product-browser";
-import { ContactButtons } from "@/components/shop";
-import { productsQuery } from "@/lib/queries";
-import { CATEGORIES, categoryName, pageMeta } from "@/lib/shop";
+import { categoryQuery, searchQuery } from "@/lib/queries";
+import { pageMeta } from "@/lib/shop";
 
 export const Route = createFileRoute("/$category")({
-  loader: async ({ context, params }) => {
-    const data = await context.queryClient.ensureQueryData(productsQuery);
-    const known = CATEGORIES.some((c) => c.slug === params.category);
-    if (!known && !data.products.some((p) => p.category === params.category)) throw notFound();
-    return { name: categoryName(params.category) };
+  validateSearch: z.object({ q: z.string().optional(), page: z.coerce.number().int().min(1).optional() }),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ context, params, deps }) => {
+    const cat = await context.queryClient.ensureQueryData(categoryQuery(params.category));
+    if (!cat) throw notFound();
+    await context.queryClient.ensureQueryData(searchQuery({ ...deps, cat: params.category }));
+    return { name: cat.name };
   },
   head: ({ loaderData, params }) => {
     if (!loaderData) return { meta: [{ title: "Not found — Screws & Tools" }, { name: "robots", content: "noindex" }] };
     const n = loaderData.name;
     return pageMeta(
       `${n} in Nassau, Bahamas — Prices & Stock | Screws & Tools`,
-      `Buy ${n.toLowerCase()} in Nassau, Bahamas. See sizes, prices in BSD and what's in stock at Screws & Tools, 9 Faith Avenue.`,
+      `Buy ${n} in Nassau, Bahamas. See sizes, prices in BSD and what's in stock at Screws & Tools, 9 Faith Avenue.`,
       `/${params.category}`,
     );
   },
@@ -33,21 +35,20 @@ export const Route = createFileRoute("/$category")({
 
 function CategoryPage() {
   const { category } = Route.useParams();
-  const { data } = useSuspenseQuery(productsQuery);
-  const items = data.products.filter((p) => p.category === category);
-  const info = CATEGORIES.find((c) => c.slug === category);
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const { data: cat } = useSuspenseQuery(categoryQuery(category));
   return (
     <div className="space-y-4">
-      <h1 className="text-5xl uppercase">{categoryName(category)} <span className="block text-2xl text-muted-foreground">in Nassau, Bahamas</span></h1>
-      {info && <p className="text-lg text-muted-foreground">{info.blurb}</p>}
-      {items.length ? (
-        <ProductBrowser key={category} products={items} showCategoryFilter={false} />
-      ) : (
-        <div className="space-y-4 rounded-lg border bg-card p-5">
-          <p className="text-lg">We carry {categoryName(category).toLowerCase()} in store — our online list is coming soon. Call or WhatsApp us for what you need.</p>
-          <ContactButtons />
-        </div>
-      )}
+      <nav aria-label="Breadcrumb" className="text-muted-foreground">
+        <Link to="/categories" className="underline">All categories</Link>
+      </nav>
+      <h1 className="text-5xl uppercase">{cat?.name} <span className="block text-2xl text-muted-foreground">in Nassau, Bahamas</span></h1>
+      <ProductBrowser
+        key={category}
+        search={{ ...search, cat: category }}
+        onChange={({ q, page }) => navigate({ search: { q, page }, replace: true })}
+      />
     </div>
   );
 }
