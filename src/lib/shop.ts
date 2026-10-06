@@ -6,17 +6,15 @@ export const SHOP = {
   address: "9 Faith Avenue, Nassau, The Bahamas",
   phone: "+1 242-341-7337",
   phoneHref: "tel:+12423417337",
-  // TODO: replace with the real WhatsApp number (digits only, e.g. 12425550000)
-  whatsapp: "",
-  // TODO: replace with the real Google review link
-  googleReviewUrl: "",
+  whatsapp: "12424573331",
+  googleReviewUrl: "https://search.google.com/local/writereview?placeid=ChIJcaUG-iZjL4kROZGCChl9abE",
   mapEmbed: "https://www.google.com/maps?q=9+Faith+Avenue,+Nassau,+Bahamas&output=embed",
   mapLink: "https://www.google.com/maps/search/?api=1&query=9+Faith+Avenue+Nassau+Bahamas",
 };
 
 export const whatsappHref = () =>
-  `https://wa.me/${SHOP.whatsapp || "12423417337"}?text=${encodeURIComponent("Hi Screws & Tools, do you have ")}`;
-export const reviewHref = () => SHOP.googleReviewUrl || SHOP.mapLink;
+  `https://wa.me/${SHOP.whatsapp}?text=${encodeURIComponent("Hi Screws & Tools, do you have ")}`;
+export const reviewHref = () => SHOP.googleReviewUrl;
 
 // Opening hours, minutes from midnight. Index 0 = Sunday.
 export const HOURS: (null | { open: number; close: number })[] = [
