@@ -1,21 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { checkAdmin, publicClient } from "./products.server";
-import { assignSlugs, slugify, type Category, type Product, type Subcategory } from "./shop";
+import { assignSlugs, slugify, type Category, type Product } from "./shop";
 
-const COLS = "id, slug, name, category, category_name, subcategory, size, price, in_stock";
+const COLS = "id, slug, name, category, category_name, size, price, in_stock";
 export const PAGE_SIZE = 48;
 
 export const searchProducts = createServerFn({ method: "GET" })
   .inputValidator((d) =>
-    z.object({ q: z.string().max(100).default(""), cat: z.string().max(200).default(""), sub: z.string().max(200).default(""), page: z.number().int().min(1).max(1000).default(1) }).parse(d),
+    z.object({ q: z.string().max(100).default(""), cat: z.string().max(200).default(""), page: z.number().int().min(1).max(1000).default(1) }).parse(d),
   )
   .handler(async ({ data }) => {
     let query = publicClient().from("products").select(COLS, { count: "exact" });
     if (data.cat) query = query.eq("category", data.cat);
-    if (data.sub) query = query.eq("subcategory", data.sub);
     const terms = data.q.replace(/[,()%*\\]/g, " ").split(/\s+/).filter(Boolean).slice(0, 6);
-    for (const t of terms) query = query.or(`name.ilike.%${t}%,category_name.ilike.%${t}%,subcategory.ilike.%${t}%`);
+    for (const t of terms) query = query.or(`name.ilike.%${t}%,category_name.ilike.%${t}%`);
     const from = (data.page - 1) * PAGE_SIZE;
     const { data: rows, count, error } = await query.order("name").range(from, from + PAGE_SIZE - 1);
     if (error) throw new Error("Could not load products");
@@ -27,20 +26,6 @@ export const listCategories = createServerFn({ method: "GET" }).handler(async ()
   if (error) throw new Error("Could not load categories");
   return (data ?? []) as Category[];
 });
-
-export const listSubcategories = createServerFn({ method: "GET" })
-  .inputValidator((d) => z.object({ cat: z.string().max(200) }).parse(d))
-  .handler(async ({ data }) => {
-    if (!data.cat) return [] as Subcategory[];
-    const { data: rows, error } = await publicClient()
-      .from("subcategories")
-      .select("category, subcategory, product_count")
-      .eq("category", data.cat)
-      .order("subcategory")
-      .range(0, 499);
-    if (error) throw new Error("Could not load subcategories");
-    return (rows ?? []) as Subcategory[];
-  });
 
 export const getCategory = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ slug: z.string().max(200) }).parse(d))
@@ -76,7 +61,6 @@ export const verifyAdmin = createServerFn({ method: "POST" })
 const row = z.object({
   name: z.string().trim().min(1).max(300),
   category: z.string().trim().min(1).max(200),
-  subcategory: z.string().trim().max(200).default(""),
   size: z.string().trim().max(200).default(""),
   price: z.number().nonnegative().nullable(),
   in_stock: z.boolean(),
@@ -125,7 +109,7 @@ export const saveProduct = createServerFn({ method: "POST" })
       const base = slugify(rec.name);
       const { data: existing } = await supabaseAdmin.from("products").select("slug").like("slug", `${base}%`);
       const [withSlug] = assignSlugs([rec], new Set((existing ?? []).map((e) => e.slug)));
-      ({ error } = await supabaseAdmin.from("products").insert(withSlug));
+      ({ error } = await supabaseAdmin.from("products").insert(withSlug!));
     }
     if (error) throw new Error(error.message);
     await touchPrices();

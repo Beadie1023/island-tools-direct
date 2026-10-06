@@ -1,12 +1,9 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { searchQuery, subcategoriesQuery, type SearchParams } from "@/lib/queries";
+import { searchQuery, type SearchParams } from "@/lib/queries";
 import type { Category } from "@/lib/shop";
 import { ProductCard } from "./shop";
 import { cn } from "@/lib/utils";
-
-const field = "min-h-14 rounded-lg border-2 border-input bg-card px-3 text-lg outline-none focus:border-primary";
 
 export function ProductBrowser({
   search,
@@ -26,18 +23,16 @@ export function ProductBrowser({
   }, [text]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data, isFetching } = useQuery({ ...searchQuery(search), placeholderData: keepPreviousData });
-  const { data: subs } = useQuery({ ...subcategoriesQuery(search.cat ?? ""), enabled: !!search.cat });
   const page = search.page ?? 1;
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
   const go = (p: number) => {
     onChange({ ...search, page: p > 1 ? p : undefined });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const showTiles = !!categories && !search.cat && !search.q;
 
   return (
     <div className="space-y-4">
-      <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
         <label htmlFor="filter-q" className="sr-only">Search by name or category</label>
         <input
           id="filter-q"
@@ -45,66 +40,25 @@ export function ProductBrowser({
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Search name or category…"
-          className={cn(field, "w-full px-4")}
+          className="min-h-14 w-full rounded-lg border-2 border-input bg-card px-4 text-lg outline-none focus:border-primary"
         />
-        {(categories || (subs && subs.length > 1)) && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {categories && (
-              <>
-                <label htmlFor="filter-cat" className="sr-only">Filter by section</label>
-                <select
-                  id="filter-cat"
-                  value={search.cat ?? ""}
-                  onChange={(e) => onChange({ ...search, cat: e.target.value || undefined, sub: undefined, page: undefined })}
-                  className={field}
-                >
-                  <option value="">All sections</option>
-                  {categories.map((c) => (
-                    <option key={c.slug} value={c.slug}>{c.name} ({c.product_count})</option>
-                  ))}
-                </select>
-              </>
-            )}
-            {subs && subs.length > 1 && (
-              <>
-                <label htmlFor="filter-sub" className="sr-only">Filter by type</label>
-                <select
-                  id="filter-sub"
-                  value={search.sub ?? ""}
-                  onChange={(e) => onChange({ ...search, sub: e.target.value || undefined, page: undefined })}
-                  className={field}
-                >
-                  <option value="">All types</option>
-                  {subs.map((s) => (
-                    <option key={s.subcategory} value={s.subcategory}>{s.subcategory} ({s.product_count})</option>
-                  ))}
-                </select>
-              </>
-            )}
-          </div>
+        {categories && (
+          <>
+            <label htmlFor="filter-cat" className="sr-only">Filter by category</label>
+            <select
+              id="filter-cat"
+              value={search.cat ?? ""}
+              onChange={(e) => onChange({ ...search, cat: e.target.value || undefined, page: undefined })}
+              className="min-h-14 rounded-lg border-2 border-input bg-card px-3 text-lg outline-none focus:border-primary sm:max-w-xs"
+            >
+              <option value="">All categories</option>
+              {categories.map((c) => (
+                <option key={c.slug} value={c.slug}>{c.name} ({c.product_count})</option>
+              ))}
+            </select>
+          </>
         )}
       </div>
-
-      {showTiles && (
-        <section aria-label="Browse by section" className="space-y-2">
-          <h2 className="text-2xl uppercase">Browse by section</h2>
-          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {categories!.map((c) => (
-              <li key={c.slug}>
-                <Link
-                  to="/$category"
-                  params={{ category: c.slug }}
-                  className="flex min-h-16 h-full flex-col justify-center rounded-lg border-l-4 border-primary bg-card px-3 py-2 font-display text-lg font-bold uppercase leading-tight hover:bg-accent"
-                >
-                  {c.name}
-                  <span className="font-sans text-sm font-normal normal-case text-muted-foreground">{c.product_count.toLocaleString()} items</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       <p className="text-muted-foreground" aria-live="polite">
         {data ? `${data.total.toLocaleString()} item${data.total === 1 ? "" : "s"}` : "Loading…"}
         {pages > 1 && ` · page ${page} of ${pages}`}

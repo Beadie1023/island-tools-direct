@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { GuidedFinder } from "@/components/guided-finder";
-import { SafeBoundary } from "@/components/safe-boundary";
 import { ProductBrowser } from "@/components/product-browser";
 import { categoriesQuery, pricesUpdatedQuery, searchQuery } from "@/lib/queries";
 import { pageMeta } from "@/lib/shop";
@@ -11,7 +9,6 @@ export const Route = createFileRoute("/products/")({
   validateSearch: z.object({
     q: z.string().optional(),
     cat: z.string().optional(),
-    sub: z.string().optional(),
     page: z.coerce.number().int().min(1).optional(),
   }),
   loaderDeps: ({ search }) => search,
@@ -47,10 +44,6 @@ function ProductsPage() {
           </strong>
         </p>
       )}
-      <details className="rounded-lg border bg-card p-4">
-        <summary className="cursor-pointer text-lg font-bold">Not sure what you need? Help me choose</summary>
-        <div className="pt-3"><SafeBoundary label="help finder"><GuidedFinder /></SafeBoundary></div>
-      </details>
       <ProductBrowser search={search} categories={cats} onChange={(s) => navigate({ search: s, replace: true })} />
     </div>
   );
