@@ -7,4 +7,8 @@
 - [ ] Confirm the Products page shows 3,692 items after import
 - [x] Admin CSV upload replaces whole list (no duplicates)
 - [x] Server-side search + pagination on Products and category pages
+- [x] Guided "Help me choose" finder on Home and Products (edit questions in src/lib/finder.ts)
+- [x] Logo + favicon (public/logo-*.svg)
+- [x] AI chat helper built (see CHATBOT-SETUP.md): run the SQL, add ANTHROPIC_API_KEY secret, publish
+- [ ] Next: synonym search (wall plug = anchor)
 - [ ] Add real WhatsApp number and Google review link in src/lib/shop.ts

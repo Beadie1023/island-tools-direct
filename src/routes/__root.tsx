@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { localBusinessJsonLd } from "@/lib/shop";
+import { ChatWidget } from "@/components/chat-widget";
 import { SiteHeader, SiteFooter } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -94,6 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700&display=swap",
       },
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
     scripts: [{ type: "application/ld+json", children: JSON.stringify(localBusinessJsonLd()) }],
@@ -128,6 +130,7 @@ function RootComponent() {
         <Outlet />
       </main>
       <SiteFooter />
+      <ChatWidget />
       <Toaster />
     </QueryClientProvider>
   );

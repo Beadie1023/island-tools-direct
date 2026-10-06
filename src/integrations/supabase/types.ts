@@ -94,7 +94,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      bump_chat_usage: {
+        Args: { p_bucket: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

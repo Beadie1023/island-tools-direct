@@ -14,8 +14,9 @@ export function SiteHeader() {
     <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
       <div className="hazard-stripe h-1.5" aria-hidden />
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <Link to="/" className="font-display text-2xl font-bold uppercase tracking-wide">
-          Screws <span className="text-primary">&amp;</span> Tools
+        <Link to="/" className="flex items-center gap-2 font-display text-2xl font-bold uppercase tracking-wide">
+          <img src="/logo-icon.svg" alt="" width={36} height={36} className="h-9 w-9" />
+          <span>Screws <span className="text-primary">&amp;</span> Tools</span>
         </Link>
         <a href={SHOP.phoneHref} className="flex min-h-11 items-center gap-2 rounded-lg bg-primary px-3 font-bold text-primary-foreground">
           <Phone className="h-4 w-4" aria-hidden /> <span className="hidden sm:inline">{SHOP.phone}</span><span className="sm:hidden">Call</span>
