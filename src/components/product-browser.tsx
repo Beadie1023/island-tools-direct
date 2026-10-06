@@ -15,7 +15,7 @@ export function ProductBrowser({
   categories?: Category[] | undefined;
 }) {
   const [text, setText] = useState(search.q ?? "");
-  useEffect(() => setText(search.q ?? ""), [search.q]);
+  useEffect(() => { setText(search.q ?? ""); }, [search.q]);
   useEffect(() => {
     if (text === (search.q ?? "")) return;
     const t = setTimeout(() => onChange({ ...search, q: text || undefined, page: undefined }), 250);

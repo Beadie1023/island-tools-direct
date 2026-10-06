@@ -15,7 +15,7 @@ export function ChatHelper() {
   const [busy, setBusy] = useState(false);
   const ask = useServerFn(askHelper);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [msgs, busy]);
+  useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, busy]);
 
   const send = async () => {
     const q = text.trim();
