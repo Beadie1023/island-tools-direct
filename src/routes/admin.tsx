@@ -4,8 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deleteProduct, saveProduct, uploadProducts, verifyAdmin } from "@/lib/products.functions";
-import { productsQuery } from "@/lib/queries";
-import { categoryName, formatPrice, type Product } from "@/lib/shop";
+import { searchQuery } from "@/lib/queries";
+import { keepPreviousData } from "@tanstack/react-query";
+import { formatPrice, type Product } from "@/lib/shop";
 import { parseRows, type ProductRow } from "@/lib/import";
 
 export const Route = createFileRoute("/admin")({
@@ -54,13 +55,15 @@ function Admin() {
 
 function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
   const qc = useQueryClient();
-  const { data } = useQuery(productsQuery);
+  const [filter, setFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const { data } = useQuery({ ...searchQuery({ q: filter, page }), placeholderData: keepPreviousData });
+  const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
   const upload = useServerFn(uploadProducts);
   const del = useServerFn(deleteProduct);
   const [preview, setPreview] = useState<{ rows: ProductRow[]; errors: string[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<Product | "new" | null>(null);
-  const [filter, setFilter] = useState("");
   const refresh = () => qc.invalidateQueries();
 
   return (
@@ -72,7 +75,7 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
 
       <section className="space-y-3 rounded-lg border bg-card p-5">
         <h2 className="text-2xl uppercase">Bulk upload (CSV or Excel)</h2>
-        <p className="text-muted-foreground">Columns: <code>name, category, size, price, in_stock</code>. Products with the same name are updated; new names are added.</p>
+        <p className="text-muted-foreground">Columns: <code>name, category, size, price, in_stock</code>. Uploading <strong>replaces the whole product list</strong> with the file.</p>
         <input
           type="file"
           accept=".csv,.xlsx,.xls"
@@ -109,15 +112,13 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl uppercase">Products ({data?.products.length ?? 0})</h2>
+          <h2 className="text-2xl uppercase">Products ({data?.total.toLocaleString() ?? 0})</h2>
           <button onClick={() => setEditing("new")} className={`${btn} bg-primary text-primary-foreground`}>+ Add</button>
         </div>
         {editing && <ProductForm pw={pw} product={editing === "new" ? null : editing} onDone={() => { setEditing(null); refresh(); }} />}
-        <input placeholder="Filter…" value={filter} onChange={(e) => setFilter(e.target.value)} className={input} />
+        <input placeholder="Filter…" value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1); }} className={input} />
         <ul className="divide-y rounded-lg border bg-card">
-          {data?.products
-            .filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()))
-            .map((p) => (
+          {data?.items.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center gap-3 p-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-bold">{p.name}</p>
@@ -135,6 +136,13 @@ function Dashboard({ pw, onLogout }: { pw: string; onLogout: () => void }) {
               </li>
             ))}
         </ul>
+        {pages > 1 && (
+          <div className="flex items-center justify-between">
+            <button disabled={page <= 1} onClick={() => setPage(page - 1)} className={`${btn} bg-secondary`}>← Prev</button>
+            <span>{page} / {pages}</span>
+            <button disabled={page >= pages} onClick={() => setPage(page + 1)} className={`${btn} bg-secondary`}>Next →</button>
+          </div>
+        )}
       </section>
     </div>
   );

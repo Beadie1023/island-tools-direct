@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Clock, MapPin, MessageCircle, Phone, Search, Star } from "lucide-react";
-import { DAY_NAMES, SHOP, hoursLabel, isOpenAt, nassauNow, reviewHref, whatsappHref, formatPrice, categoryName, type Product } from "@/lib/shop";
+import { DAY_NAMES, SHOP, hoursLabel, isOpenAt, nassauNow, reviewHref, whatsappHref, formatPrice, type Product } from "@/lib/shop";
 import { cn } from "@/lib/utils";
 
 export function OpenBadge({ className }: { className?: string }) {

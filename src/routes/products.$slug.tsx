@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ContactButtons, ProductCard, StockLabel } from "@/components/shop";
 import { productQuery } from "@/lib/queries";
-import { SHOP, categoryName, formatPrice, pageMeta } from "@/lib/shop";
+import { SHOP, formatPrice, pageMeta } from "@/lib/shop";
 
 export const Route = createFileRoute("/products/$slug")({
   loader: async ({ context, params }) => {
