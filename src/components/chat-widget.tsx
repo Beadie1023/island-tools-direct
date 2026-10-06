@@ -20,10 +20,13 @@ export function ChatWidget() {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
   const [detail, setDetail] = useState("");
-  const endRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [msgs, busy, problem]);
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs, busy, problem, open]);
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
@@ -84,7 +87,7 @@ export function ChatWidget() {
         </button>
       </header>
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3" aria-live="polite">
+      <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3" aria-live="polite">
         {msgs.length === 0 && (
           <div className="space-y-2">
             <p className="text-lg">Hi! Tell me what you're trying to do and I'll find the right parts.</p>
@@ -126,7 +129,6 @@ export function ChatWidget() {
             )}
           </div>
         )}
-        <div ref={endRef} />
       </div>
 
       <form
