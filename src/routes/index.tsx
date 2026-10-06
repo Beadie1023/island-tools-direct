@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ContactButtons, MapEmbed, OpenBadge, ReviewButton, SearchBar, TodayHours } from "@/components/shop";
 import { GuidedFinder } from "@/components/guided-finder";
+import { SafeBoundary } from "@/components/safe-boundary";
 import { categoriesQuery } from "@/lib/queries";
 import { pageMeta } from "@/lib/shop";
 
@@ -35,7 +36,9 @@ function Home() {
 
       <section aria-labelledby="help" className="space-y-3">
         <h2 id="help" className="text-3xl uppercase">Not sure what you need?</h2>
-        <GuidedFinder />
+        <SafeBoundary label="help finder">
+          <GuidedFinder />
+        </SafeBoundary>
       </section>
 
       <section aria-labelledby="cats" className="space-y-3">

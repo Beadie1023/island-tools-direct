@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { localBusinessJsonLd } from "@/lib/shop";
 import { ChatWidget } from "@/components/chat-widget";
+import { SafeBoundary } from "@/components/safe-boundary";
 import { SiteHeader, SiteFooter } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -130,7 +131,9 @@ function RootComponent() {
         <Outlet />
       </main>
       <SiteFooter />
-      <ChatWidget />
+      <SafeBoundary label="chat helper" floating>
+        <ChatWidget />
+      </SafeBoundary>
       <Toaster />
     </QueryClientProvider>
   );

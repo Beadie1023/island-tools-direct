@@ -1,5 +1,3 @@
-import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { MessageCircle, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { CHAT, type ChatItem } from "@/lib/chat-config";
@@ -16,12 +14,12 @@ const STARTERS = [
 ];
 
 export function ChatWidget() {
-  const send = useServerFn(sendChat);
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
+  const [detail, setDetail] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -43,14 +41,17 @@ export function ChatWidget() {
     setMsgs(next);
     setText("");
     setProblem("");
+    setDetail("");
     setBusy(true);
     try {
       const history = next.slice(-CHAT.maxTurns).map((m) => ({ role: m.role, content: m.content }));
-      const res = await send({ data: { messages: history } });
+      const res = await sendChat({ data: { messages: history } });
       if (res.ok) setMsgs([...next, { role: "assistant", content: res.reply, items: res.items }]);
       else setProblem(res.message);
-    } catch {
+    } catch (e) {
+      console.error("[chat]", e);
       setProblem("Something went wrong. Please call or WhatsApp us.");
+      setDetail(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -99,12 +100,12 @@ export function ChatWidget() {
             <p className={m.role === "user" ? "max-w-[85%] rounded-lg bg-primary px-3 py-2 text-primary-foreground" : "whitespace-pre-wrap text-lg"}>{m.content}</p>
             {m.items && m.items.length > 0 && (
               <ul className="space-y-2">
-                {m.items.map((it) => (
+                {m.items.filter((it) => !!it.slug).map((it) => (
                   <li key={it.slug}>
-                    <Link to="/products/$slug" params={{ slug: it.slug }} className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2 hover:bg-accent">
+                    <a href={`/products/${encodeURIComponent(it.slug)}`} className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2 hover:bg-accent">
                       <span className="font-semibold leading-tight">{it.name}</span>
                       <span className="shrink-0 font-bold text-primary">{formatPrice(it.price)}</span>
-                    </Link>
+                    </a>
                   </li>
                 ))}
                 <li className="text-sm text-muted-foreground">Prices are from our list. Call or WhatsApp to confirm stock before you come.</li>
@@ -117,6 +118,12 @@ export function ChatWidget() {
           <div className="space-y-2 rounded-lg border bg-background p-3">
             <p>{problem}</p>
             <ContactButtons />
+            {detail && (
+              <details className="text-sm text-muted-foreground">
+                <summary className="cursor-pointer">Technical details</summary>
+                <p className="break-words pt-1">{detail}</p>
+              </details>
+            )}
           </div>
         )}
         <div ref={endRef} />
