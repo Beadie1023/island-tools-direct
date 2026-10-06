@@ -25,6 +25,7 @@ export type Database = {
           price: number | null
           size: string
           slug: string
+          subcategory: string
           updated_at: string
         }
         Insert: {
@@ -37,6 +38,7 @@ export type Database = {
           price?: number | null
           size?: string
           slug: string
+          subcategory?: string
           updated_at?: string
         }
         Update: {
@@ -49,6 +51,7 @@ export type Database = {
           price?: number | null
           size?: string
           slug?: string
+          subcategory?: string
           updated_at?: string
         }
         Relationships: []
@@ -78,6 +81,14 @@ export type Database = {
           name: string | null
           product_count: number | null
           slug: string | null
+        }
+        Relationships: []
+      }
+      subcategories: {
+        Row: {
+          category: string | null
+          product_count: number | null
+          subcategory: string | null
         }
         Relationships: []
       }
