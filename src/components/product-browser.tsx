@@ -12,7 +12,7 @@ export function ProductBrowser({
 }: {
   search: SearchParams;
   onChange: (s: SearchParams) => void;
-  categories?: Category[];
+  categories?: Category[] | undefined;
 }) {
   const [text, setText] = useState(search.q ?? "");
   useEffect(() => setText(search.q ?? ""), [search.q]);
