@@ -109,7 +109,7 @@ export const saveProduct = createServerFn({ method: "POST" })
       const base = slugify(rec.name);
       const { data: existing } = await supabaseAdmin.from("products").select("slug").like("slug", `${base}%`);
       const [withSlug] = assignSlugs([rec], new Set((existing ?? []).map((e) => e.slug)));
-      ({ error } = await supabaseAdmin.from("products").insert(withSlug));
+      ({ error } = await supabaseAdmin.from("products").insert(withSlug!));
     }
     if (error) throw new Error(error.message);
     await touchPrices();

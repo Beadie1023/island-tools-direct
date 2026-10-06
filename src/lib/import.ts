@@ -19,13 +19,13 @@ export function normalizeRows(raw: Record<string, unknown>[]) {
   raw.forEach((r, i) => {
     const o: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(r)) o[k.trim().toLowerCase().replace(/[\s-]+/g, "_")] = v;
-    const name = String(o.name ?? "").trim();
-    const category = String(o.category ?? "").trim();
+    const name = String(o["name"] ?? "").trim();
+    const category = String(o["category"] ?? "").trim();
     if (!name || !category) {
       errors.push(`Row ${i + 2}: missing name or category`);
       return;
     }
-    rows.push({ name, category, size: String(o.size ?? "").trim(), price: parsePrice(o.price), in_stock: parseStock(o.in_stock) });
+    rows.push({ name, category, size: String(o["size"] ?? "").trim(), price: parsePrice(o["price"]), in_stock: parseStock(o["in_stock"]) });
   });
   return { rows, errors };
 }
@@ -33,6 +33,7 @@ export function normalizeRows(raw: Record<string, unknown>[]) {
 export async function parseRows(file: File) {
   const XLSX = await import("xlsx");
   const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const sheet = wb.Sheets[wb.SheetNames[0] ?? ""];
+  if (!sheet) return { rows: [], errors: ["Empty file"] };
   return normalizeRows(XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" }));
 }

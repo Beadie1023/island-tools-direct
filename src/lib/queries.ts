@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { getCategory, getPricesUpdated, getProduct, listCategories, searchProducts } from "./products.functions";
 
-export type SearchParams = { q?: string; cat?: string; page?: number };
+export type SearchParams = { q?: string | undefined; cat?: string | undefined; page?: number | undefined };
 
 export const searchQuery = (s: SearchParams) =>
   queryOptions({
