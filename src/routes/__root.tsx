@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { localBusinessJsonLd } from "@/lib/shop";
 import { SiteHeader, SiteFooter } from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
+import { ChatHelper } from "@/components/chat-helper";
 
 function NotFoundComponent() {
   return (
@@ -128,6 +129,7 @@ function RootComponent() {
         <Outlet />
       </main>
       <SiteFooter />
+      <ChatHelper />
       <Toaster />
     </QueryClientProvider>
   );
