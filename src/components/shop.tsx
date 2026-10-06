@@ -29,7 +29,7 @@ export function OpenBadge({ className }: { className?: string }) {
 
 export function TodayHours() {
   const [day, setDay] = useState<number | null>(null);
-  useEffect(() => setDay(nassauNow().day), []);
+  useEffect(() => { setDay(nassauNow().day); }, []);
   return (
     <div className="flex items-center gap-3 text-lg">
       <Clock className="h-5 w-5 text-primary" aria-hidden />

@@ -25,7 +25,7 @@ const btn = "min-h-12 rounded-lg px-5 font-bold disabled:opacity-50";
 
 function Admin() {
   const [pw, setPw] = useState<string | null>(null);
-  useEffect(() => setPw(sessionStorage.getItem("st-admin")), []);
+  useEffect(() => { setPw(sessionStorage.getItem("st-admin")); }, []);
   const verify = useServerFn(verifyAdmin);
 
   if (!pw)
