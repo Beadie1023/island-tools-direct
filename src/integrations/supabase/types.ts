@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_usage: {
+        Row: {
+          bucket: string
+          hits: number
+          updated_at: string
+        }
+        Insert: {
+          bucket: string
+          hits?: number
+          updated_at?: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
@@ -94,7 +112,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      bump_chat_usage: { Args: { p_bucket: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
