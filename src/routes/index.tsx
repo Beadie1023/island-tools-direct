@@ -25,7 +25,7 @@ function Home() {
         <OpenBadge />
         <p className="font-display text-xl font-bold uppercase tracking-widest text-primary">Small parts. Big results.</p>
         <h1 className="text-5xl uppercase sm:text-6xl">
-          The right screw. <span className="text-primary">Right here</span> in Nassau.
+          Small parts. <span className="text-primary">Big results.</span>
         </h1>
         <p className="text-xl text-muted-foreground">Fasteners and tools on Faith Avenue. Search what you need, check the price, then come grab it.</p>
         <SearchBar onSubmit={(q) => navigate({ to: "/products", search: { q } })} />
