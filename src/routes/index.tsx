@@ -23,6 +23,7 @@ function Home() {
     <div className="space-y-10">
       <section className="space-y-5 pt-2">
         <OpenBadge />
+        <p className="font-display text-xl font-bold uppercase tracking-widest text-primary">Small parts. Big results.</p>
         <h1 className="text-5xl uppercase sm:text-6xl">
           The right screw. <span className="text-primary">Right here</span> in Nassau.
         </h1>

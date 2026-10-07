@@ -6,3 +6,5 @@
 - [x] Fast server-side search + pagination on Products and category pages
 - [x] Prices last updated = today
 - [x] "Ask Screws & Tools" chat helper that actually answers and suggests real products
+- [x] Chat helper gives WhatsApp +1 242-457-3331 (not shop phone)
+- [x] Add slogan "Small parts. Big results." to home hero
